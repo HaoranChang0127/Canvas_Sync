@@ -21,6 +21,28 @@
 
 程序运行期间请保持黑色命令窗口开启。登录由用户在浏览器完成，登录会话保存在当前 Windows 用户目录的 `.canvas-course-library/browser`，程序不会向其他服务上传课程文件。
 
+## Ubuntu 使用
+
+1. 从 [Node.js 官网](https://nodejs.org/en/download)安装 Node.js LTS（包含 npm），重新打开终端后运行 `node --version` 和 `npm --version` 确认安装成功。
+2. 在解压后的项目目录中打开终端，安装文件夹选择器和 Playwright 系统依赖：
+
+   ```bash
+   sudo apt update
+   sudo apt install -y zenity xdg-utils
+   npm install
+   npx playwright install-deps chromium
+   ```
+
+3. 在项目目录启动：
+
+   ```bash
+   bash start-ubuntu.sh
+   ```
+
+   首次启动会下载 Chromium。界面会在默认浏览器中打开；如果没有自动打开，请访问 `http://127.0.0.1:38465`。使用时保持终端开启，登录、选课和同步步骤与 Windows 相同。默认同步位置是 `~/Documents/Canvas Course Library`，浏览器登录会话保存在 `~/.canvas-course-library/browser`。
+
+登录浏览器和文件夹选择器需要 Ubuntu 图形桌面。也可以直接输入已有文件夹的完整路径。Ubuntu 尚未使用真实 Canvas 账号完成端到端测试。
+
 ## 本地组织
 
 - `Modules`：按 Canvas 模块建立目录，保存页面、附件及作业。页面中识别出的 Canvas 附件链接指向本地文件。

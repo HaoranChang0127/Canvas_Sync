@@ -19,6 +19,16 @@ async function writeSettings(appData,folder){
   return {folder};
 }
 async function chooseFolder(){
+  if(process.platform==='linux'){
+    try {
+      const {stdout}=await execute('zenity',['--file-selection','--directory','--title=Choose the Canvas sync folder'],{encoding:'utf8'});
+      return stdout.trim()||null;
+    } catch(e) {
+      if(e.code===1)return null;
+      if(e.code==='ENOENT')throw Error('Install zenity to choose a folder, or enter its full path and click Save folder.');
+      throw e;
+    }
+  }
   if(process.platform!=='win32')throw Error('Folder selection is unavailable on this system. Enter and save the full path instead.');
   const script=[
     '[Console]::OutputEncoding = [System.Text.Encoding]::UTF8',

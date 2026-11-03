@@ -49,4 +49,5 @@ server.listen(PORT,'127.0.0.1',()=>{
   const url=`http://127.0.0.1:${PORT}`;
   console.log(`Canvas Course Library: ${url}`);
   if(process.platform==='win32')require('node:child_process').spawn('cmd.exe',['/c','start','',url],{windowsHide:true,stdio:'ignore'}).unref();
+  else if(process.platform==='linux')require('node:child_process').execFile('xdg-open',[url],()=>{});
 });

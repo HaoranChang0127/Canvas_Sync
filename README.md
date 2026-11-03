@@ -21,6 +21,28 @@ Sync selected Canvas courses to your computer so you can browse the original mat
 
 Keep the command window open while the app runs. You sign in through the browser; the session is stored in `.canvas-course-library/browser` in your Windows user directory. The app does not upload course files to another service.
 
+## Getting started on Ubuntu
+
+1. Install Node.js LTS (including npm) from [nodejs.org](https://nodejs.org/en/download) and confirm that `node --version` and `npm --version` work in a new terminal.
+2. Install the folder picker and Playwright system dependencies. From the extracted project folder, run:
+
+   ```bash
+   sudo apt update
+   sudo apt install -y zenity xdg-utils
+   npm install
+   npx playwright install-deps chromium
+   ```
+
+3. Start Canvas Sync from the project folder:
+
+   ```bash
+   bash start-ubuntu.sh
+   ```
+
+   The first launch downloads Chromium. The app opens in your default browser; if it does not, visit `http://127.0.0.1:38465`. Keep the terminal open while using the app. Use the same sign-in, course selection, and sync steps described above. On Ubuntu, the default sync folder is `~/Documents/Canvas Course Library`; the browser session is stored in `~/.canvas-course-library/browser`.
+
+A graphical Ubuntu desktop session is needed for the sign-in browser and folder picker. You can also enter an existing folder path directly in the app. Ubuntu has not yet been tested end to end against a real Canvas account.
+
 ## Library layout
 
 - `Modules`: folders organized by Canvas module, containing pages, attachments, and assignments. Detected links to Canvas attachments in pages point to local files.
