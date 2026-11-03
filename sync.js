@@ -1,6 +1,7 @@
 const fs = require('node:fs/promises');
 const path = require('node:path');
 const {safeName, saveManaged, links, extractFileId} = require('./core');
+const {recordingsInPage,syncRecording}=require('./recordings');
 const ORIGIN = 'https://canvas.uts.edu.au';
 
 class Canvas {
@@ -59,6 +60,7 @@ async function syncCourse(canvas,course,base,progress=()=>{}) {
   const statePath=path.join(courseDir,'.canvas-sync.json'); let state={};
   try{state=JSON.parse(await fs.readFile(statePath,'utf8'));}catch(e){if(e.code!=='ENOENT')throw e;}
   const prefix=`/api/v1/courses/${course.id}`, failures=[], groups=[], entries=[], filesById=new Map(), filePaths=new Map(), pagesBySlug=new Map(), assignmentsById=new Map(), seenPages=new Set(), seenAssignments=new Set();
+  const recordings=new Map();
   const savedPath=(key,proposed)=>state[key]?.path || proposed;
   async function write(rel,data,key,updated){
     const result=await saveManaged(courseDir,rel,Buffer.isBuffer(data)?data:Buffer.from(data),state,key,updated);
@@ -121,6 +123,7 @@ async function syncCourse(canvas,course,base,progress=()=>{}) {
     if(seenPages.has(slug)){const existing=state[key]?.path;record(group,label||slug,'Page',existing,sourceUrl);return;}
     const data=await canvas.object(`${prefix}/pages/${encodeURIComponent(slug)}`);
     const rel=savedPath(key,path.join(group.folder,`${safeName(data.title||slug)} [page-${data.page_id||safeName(slug)}].html`));
+    for(const item of recordingsInPage(data.body,canvas.origin,data.title||slug))if(!recordings.has(item.url))recordings.set(item.url,item);
     const body=await prepareHtml(data.body,group,rel);
     const html=`<!doctype html><html><head><meta charset="utf-8"><title>${escapeHtml(data.title||slug)}</title></head><body><h1>${escapeHtml(data.title||slug)}</h1>\n${body}</body></html>`;
     await write(rel,html,key,data.updated_at);seenPages.add(slug);
@@ -142,7 +145,10 @@ async function syncCourse(canvas,course,base,progress=()=>{}) {
       if(it.type==='File'&&it.content_id)await file(Number(it.content_id),group,it.title,it.html_url);
       else if(it.type==='Page'&&it.page_url)await page(it.page_url,group,it.title,it.html_url);
       else if(it.type==='Assignment'&&it.content_id)await assignment(Number(it.content_id),group,it.title,it.html_url);
-      else record(group,it.title,it.type,null,it.external_url||it.html_url);
+      else {
+        if(it.external_url)for(const item of recordingsInPage(`<a href="${it.external_url}">`,canvas.origin,it.title))if(!recordings.has(item.url))recordings.set(item.url,item);
+        record(group,it.title,it.type,null,it.external_url||it.html_url);
+      }
     }catch(e){failures.push(`${group.name} / ${it.title}: ${e.message}`);}tick(it.title);}
   }
   for(const f of files){if(!filePaths.has(Number(f.id)))try{await file(Number(f.id),other,f.display_name);}catch(e){failures.push(`${f.display_name}: ${e.message}`);}tick(f.display_name);}
@@ -156,6 +162,11 @@ async function syncCourse(canvas,course,base,progress=()=>{}) {
       await write(rel,`<!doctype html><html><head><meta charset="utf-8"><title>${escapeHtml(a.title)}</title></head><body><h1>${escapeHtml(a.title)}</h1>${body}</body></html>`,key,a.updated_at);
       record(announcementGroup,a.title,'Announcement',rel,a.html_url);
     }catch(e){failures.push(`${a.title}: ${e.message}`);}tick(a.title);
+  }
+  for(const item of recordings.values()){
+    progress(0.98,`Recording: ${item.title}`);
+    const result=await syncRecording(canvas.context,item,courseDir,state);
+    record(other,item.title,result.found?'Recording transcript or audio':result.status,result.notePath,item.url);
   }
   let index=`# ${course.name}\n\nCanvas: ${canvas.origin}/courses/${course.id}\n\nSynced at: ${new Date().toLocaleString()}\n\n`;
   for(const group of [...groups,other,assignGroup,announcementGroup]){

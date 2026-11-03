@@ -2,7 +2,7 @@
 
 [中文说明](README.zh-CN.md)
 
-Sync selected Canvas courses to your computer so you can browse the original materials and give tools such as Codex and Claude Code access to them. This version syncs course pages, files, assignments, announcements, and module structure. Recording transcripts and embedded recordings are not supported yet.
+Sync selected Canvas courses to your computer so you can browse the original materials and give tools such as Codex and Claude Code access to them. This version syncs course pages, files, assignments, announcements, and module structure. Zoom recording links on Canvas pages can be checked for existing transcripts or audio. Embedded recording tools are not supported yet.
 
 ## Getting started on Windows
 
@@ -48,6 +48,7 @@ A graphical Ubuntu desktop session is needed for the sign-in browser and folder 
 - For Canvas addresses other than the original UTS default, each institution has its own subfolder under the selected sync folder. Existing UTS course paths are unchanged.
 - `Modules`: folders organized by Canvas module, containing pages, attachments, and assignments. Detected links to Canvas attachments in pages point to local files.
 - `Other Materials`: materials and assignments not in a module, plus course announcements.
+- `Other Materials/Recordings`: direct Zoom recording links, recognized passcodes, and available transcript or audio files.
 - `Course Index.md`: materials listed in module order. A file referenced by multiple modules is stored only once.
 - `.canvas-sync.json`: saved file paths and previous sync information.
 
@@ -57,7 +58,7 @@ On subsequent syncs, unchanged remote files are not downloaded again, and locall
 
 - The default address is UTS Canvas; set the address to your institution before signing in. Other institutions have not yet been tested end to end.
 - End-to-end testing on Windows with a UTS Canvas session through this app has not yet been completed. A cloud browser session was used to check that the Canvas course API could be read; the sync process was tested with simulated course data.
-- This version does not retrieve subtitles or audio from Zoom or other embedded recordings, and it does not download video. Recording links shown on pages are retained; external tools may only retain the Canvas entry point.
+- For direct Zoom recording links in Canvas pages or module external links, the app tries to retrieve visible VTT/SRT transcripts or direct M4A/MP3 audio links. Recording access and available files depend on the sharing settings; the Zoom flow has not yet been verified end to end. Embedded Zoom and other recording platforms are not supported. Video is not downloaded.
 - Only content accessible to the current account and discoverable through the Canvas API can be synced. Third-party platforms, restricted files, and complex embedded content may not be saved offline; check the failure messages and course index.
 - The course list includes current, completed, and pending courses returned by Canvas. Some past courses or materials may be unavailable if the institution restricts access.
 - Canvas file links within pages are rewritten to local attachments where possible. Links between pages and other external links may still require an internet connection and Canvas sign-in.
