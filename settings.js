@@ -10,16 +10,16 @@ async function readSettings(appData){
   catch(e){if(e.code==='ENOENT')return {folder:defaultFolder()};throw e;}
 }
 async function writeSettings(appData,folder){
-  if(typeof folder!=='string'||!path.isAbsolute(folder.trim()))throw Error('请输入完整的文件夹路径。');
+  if(typeof folder!=='string'||!path.isAbsolute(folder.trim()))throw Error('Enter a full folder path.');
   folder=path.normalize(folder.trim());
   const stat=await fs.stat(folder).catch(()=>null);
-  if(!stat||!stat.isDirectory())throw Error('文件夹不存在，请先创建或选择已有文件夹。');
+  if(!stat||!stat.isDirectory())throw Error('Folder does not exist. Create it or choose an existing folder.');
   await fs.mkdir(appData,{recursive:true});
   await fs.writeFile(path.join(appData,'settings.json'),JSON.stringify({folder},null,2));
   return {folder};
 }
 async function chooseFolder(){
-  if(process.platform!=='win32')throw Error('当前系统不支持文件夹选择，请在输入框填写完整路径并保存。');
+  if(process.platform!=='win32')throw Error('Folder selection is unavailable on this system. Enter and save the full path instead.');
   const script=[
     '[Console]::OutputEncoding = [System.Text.Encoding]::UTF8',
     'Add-Type -AssemblyName System.Windows.Forms',

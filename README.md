@@ -1,38 +1,40 @@
-# Canvas 课程资料库
+# Canvas Sync
 
-将选中的 UTS Canvas 课程同步到本地，便于你查看原始资料，也便于 Codex 等工具读取。此版本只处理课程页面、文件、作业、公告和模块结构；录播转录与内嵌录播不在当前范围。
+[中文说明](README.zh-CN.md)
 
-## Windows 使用
+Sync selected UTS Canvas courses to your computer so you can browse the original materials and give tools such as Codex and Claude Code access to them. This version syncs course pages, files, assignments, announcements, and module structure. Recording transcripts and embedded recordings are not supported yet.
 
-1. 如果尚未安装 Node.js LTS，在 Windows 开始菜单搜索并打开 **PowerShell**，粘贴下面的命令并按回车：
+## Getting started on Windows
+
+1. If Node.js LTS is not installed, open **PowerShell** from the Start menu, paste the following command, and press Enter:
 
    ```powershell
-   winget install --id OpenJS.NodeJS.LTS --exact --source winget
+   winget install OpenJS.NodeJS.LTS
    ```
 
-   按提示完成安装；如果 Windows 询问是否允许安装，请选择“是”。安装完成后关闭 PowerShell，再执行下一步。若提示找不到 `winget`，可从 [Node.js 官网](https://nodejs.org/)下载 LTS 安装包，并保留默认的 npm 选项。
-2. 解压本压缩包，双击 `start-windows.bat`。首次启动会安装程序依赖及 Chromium，需要联网。
-3. 界面打开后，点击「登录 Canvas」，在新浏览器中完成 UTS 登录和验证，然后返回界面点击「刷新课程」。Dashboard 课程显示在前，其他可访问课程显示在后。
-4. 在「同步位置」查看默认路径，或点击「选择文件夹」更改；也可以输入一个已有文件夹的完整路径，再点击「保存位置」。位置会在下次启动时保留。更改位置不会移动已经同步的文件。
-5. 勾选一门或多门课程，点击右上角的「同步所选课程」。每门课有单独的进度条，程序依次同步选中的课程。同步结束如果有未完成项，原因会显示在进度条下方。
-6. 打开同步位置中的课程文件夹，在 `Course Index.md` 查看模块和资料链接。
+   Follow the installation prompts. If Windows asks for permission, select Yes. Close PowerShell after installation. If `winget` is unavailable, download the LTS installer from [nodejs.org](https://nodejs.org/) and keep the default npm option.
+2. Download and extract the project, then double-click `start-windows.bat`. The first launch requires an internet connection to install dependencies and Chromium.
+3. Click **Sign in to Canvas**, complete UTS sign-in and verification in the browser window, then return and click **Refresh courses**. Dashboard courses appear first, followed by other accessible courses.
+4. Check the default **Sync folder**, or click **Choose folder** to change it. You can also enter the full path to an existing folder and click **Save folder**. Your choice is remembered for the next launch. Changing folders does not move previously synced files.
+5. Select one or more courses and click **Sync selected courses** in the top right. Each course has its own progress bar; selected courses are synced one at a time. Any incomplete items are shown beneath the progress bar.
+6. Open the course folder in your sync location and view `Course Index.md` for modules and links to materials. You can also point Codex or Claude Code at this folder.
 
-程序运行期间请保持黑色命令窗口开启。登录由用户在浏览器完成，登录会话保存在当前 Windows 用户目录的 `.canvas-course-library/browser`，程序不会向其他服务上传课程文件。
+Keep the command window open while the app runs. You sign in through the browser; the session is stored in `.canvas-course-library/browser` in your Windows user directory. The app does not upload course files to another service.
 
-## 本地组织
+## Library layout
 
-- `Modules`：按 Canvas 模块建立目录，保存页面、附件及作业。页面中识别出的 Canvas 附件链接指向本地文件。
-- `Other Materials`：不在任何模块中发现的资料、未归入模块的作业及课程公告。
-- `Course Index.md`：按模块顺序列出资料；同一份文件可以被多个模块引用，但只保存一份原文件。
-- `.canvas-sync.json`：记录文件路径和上次同步信息。
+- `Modules`: folders organized by Canvas module, containing pages, attachments, and assignments. Detected links to Canvas attachments in pages point to local files.
+- `Other Materials`: materials and assignments not in a module, plus course announcements.
+- `Course Index.md`: materials listed in module order. A file referenced by multiple modules is stored only once.
+- `.canvas-sync.json`: saved file paths and previous sync information.
 
-重新同步时，远端未变的文件不会重复下载；已被你编辑的文件不会静默覆盖。Canvas 上已经删除的资料不会被自动删除。若某些内容无法访问，程序会显示“部分内容未同步”，并在课程索引中列出失败原因。
+On subsequent syncs, unchanged remote files are not downloaded again, and locally edited files are not silently overwritten. Materials deleted from Canvas are not automatically deleted locally. If some content cannot be accessed, the app reports incomplete items and lists the reasons in the course index.
 
-## 当前限制
+## Current limitations
 
-- 尚未在 Windows 或通过本程序登录后的真实 UTS Canvas 课程上完成端到端测试。云端浏览器已验证 UTS 登录会话可以读取 Canvas 课程接口；课程同步本身已使用模拟课程数据测试。
-- 本版本不获取 Zoom 或其他内嵌录播的字幕和音频，也不下载视频。页面中显示的录播链接会保留在页面中；外部工具可能仅保留 Canvas 入口。
-- 只能同步当前账号有权访问、且能够通过 Canvas 接口发现的内容。第三方平台、受限文件及复杂嵌入内容可能无法离线保存；请查看失败提示和课程索引。
-- 课程列表包含 Canvas 返回的当前、已完成和待加入课程；如果学校限制历史课程访问，部分课程或资料可能无法读取。
-- 页面中的 Canvas 文件链接会尽量指向本地附件。页面之间的链接和其他外部链接仍可能需要网络及 Canvas 登录。
-- 生成的课程索引若被手动修改，后续同步会保留该文件并提示冲突；建议在单独文件中记笔记。
+- End-to-end testing on Windows with a UTS Canvas session through this app has not yet been completed. A cloud browser session was used to check that the Canvas course API could be read; the sync process was tested with simulated course data.
+- This version does not retrieve subtitles or audio from Zoom or other embedded recordings, and it does not download video. Recording links shown on pages are retained; external tools may only retain the Canvas entry point.
+- Only content accessible to the current account and discoverable through the Canvas API can be synced. Third-party platforms, restricted files, and complex embedded content may not be saved offline; check the failure messages and course index.
+- The course list includes current, completed, and pending courses returned by Canvas. Some past courses or materials may be unavailable if the institution restricts access.
+- Canvas file links within pages are rewritten to local attachments where possible. Links between pages and other external links may still require an internet connection and Canvas sign-in.
+- If you manually edit a generated course index, subsequent syncs preserve it and report a conflict. Keep notes in a separate file.
