@@ -1,0 +1,12 @@
+const {test}=require('node:test');const assert=require('node:assert/strict');const fs=require('node:fs');const vm=require('node:vm');
+test('每门课程单独显示同步进度和结果',async()=>{
+ class Element{constructor(tag){this.tag=tag;this.children=[];this.dataset={};this.value='';this.hidden=false;this.checked=false;this.textContent='';}append(...items){this.children.push(...items)}replaceChildren(){this.children=[]}querySelector(selector){if(selector==='progress')return this.children.find(x=>x.tag==='progress');if(selector==='.state')return this.children.find(x=>x.className==='state');if(selector==='.last')return this.children[0].children.find(x=>x.className==='last');}}
+ const elements=Object.fromEntries(['login','load','sync','status','folder','courses'].map(x=>[x,new Element('div')]));const timers=[];let currentStatus={busy:false,message:'等待',courses:{}};
+ const document={getElementById:id=>elements[id],createElement:tag=>new Element(tag),querySelectorAll:()=>elements.courses.children.map(row=>row.children[0].children[0]).filter(c=>c.checked),querySelector:selector=>{let id=selector.match(/data-id="(\d+)"/)?.[1];return elements.courses.children.find(row=>String(row.dataset.id)===id)}};
+ const fetch=async(url,opt)=>({ok:true,json:async()=>url==='/api/courses'?{folder:'X',courses:[{id:1,name:'Course A'},{id:2,name:'Course B'}]}:url==='/api/status'?currentStatus:{ok:true}});
+ const html=fs.readFileSync(require.resolve('./index.html'),'utf8');const script=html.match(/<script>([\s\S]*?)<\/script>/)[1];
+ vm.runInNewContext(script,{document,fetch,setTimeout:fn=>timers.push(fn),Date,Number,Object,Error,console});
+ await new Promise(setImmediate);await elements.load.onclick();const rows=elements.courses.children;assert.equal(rows.length,2);rows[0].children[0].children[0].checked=true;rows[1].children[0].children[0].checked=true;await elements.sync.onclick();
+ currentStatus={busy:true,message:'同步中',courses:{1:{percent:32,message:'读取页面',state:'running'},2:{percent:0,message:'等待同步',state:'pending'}}};await timers.shift()();assert.equal(rows[0].querySelector('progress').value,32);assert.equal(rows[1].querySelector('progress').value,0);assert.equal(rows[1].querySelector('.state').textContent,'等待同步');
+ currentStatus={busy:false,message:'结束',courses:{1:{percent:100,message:'完成',state:'complete'},2:{percent:100,message:'部分失败',state:'partial'}}};await timers.shift()();assert.equal(rows[0].querySelector('.state').textContent,'完成');assert.equal(rows[1].querySelector('.state').textContent,'部分失败');assert.equal(elements.sync.disabled,false);
+});
