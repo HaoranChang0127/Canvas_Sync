@@ -2,7 +2,7 @@
 
 [中文说明](README.zh-CN.md)
 
-Sync selected UTS Canvas courses to your computer so you can browse the original materials and give tools such as Codex and Claude Code access to them. This version syncs course pages, files, assignments, announcements, and module structure. Recording transcripts and embedded recordings are not supported yet.
+Sync selected Canvas courses to your computer so you can browse the original materials and give tools such as Codex and Claude Code access to them. This version syncs course pages, files, assignments, announcements, and module structure. Recording transcripts and embedded recordings are not supported yet.
 
 ## Getting started on Windows
 
@@ -14,7 +14,7 @@ Sync selected UTS Canvas courses to your computer so you can browse the original
 
    Follow the installation prompts. If Windows asks for permission, select Yes. Close PowerShell after installation. If `winget` is unavailable, download the LTS installer from [nodejs.org](https://nodejs.org/) and keep the default npm option.
 2. Download and extract the project, then double-click `start-windows.bat`. The first launch requires an internet connection to install dependencies and Chromium.
-3. Click **Sign in to Canvas**, complete UTS sign-in and verification in the browser window, then return and click **Refresh courses**. Dashboard courses appear first, followed by other accessible courses.
+3. Click **Sign in to Canvas**, complete your Canvas sign-in and verification in the browser window, then return and click **Refresh courses**. Dashboard courses appear first, followed by other accessible courses.
 4. Check the default **Sync folder**, or click **Choose folder** to change it. You can also enter the full path to an existing folder and click **Save folder**. Your choice is remembered for the next launch. Changing folders does not move previously synced files.
 5. Select one or more courses and click **Sync selected courses** in the top right. Each course has its own progress bar; selected courses are synced one at a time. Any incomplete items are shown beneath the progress bar.
 6. Open the course folder in your sync location and view `Course Index.md` for modules and links to materials. You can also point Codex or Claude Code at this folder.
@@ -32,6 +32,7 @@ On subsequent syncs, unchanged remote files are not downloaded again, and locall
 
 ## Current limitations
 
+- The current Canvas URL is configured for UTS (`https://canvas.uts.edu.au`). Support for choosing another institution is not implemented yet.
 - End-to-end testing on Windows with a UTS Canvas session through this app has not yet been completed. A cloud browser session was used to check that the Canvas course API could be read; the sync process was tested with simulated course data.
 - This version does not retrieve subtitles or audio from Zoom or other embedded recordings, and it does not download video. Recording links shown on pages are retained; external tools may only retain the Canvas entry point.
 - Only content accessible to the current account and discoverable through the Canvas API can be synced. Third-party platforms, restricted files, and complex embedded content may not be saved offline; check the failure messages and course index.
