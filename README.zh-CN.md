@@ -14,7 +14,7 @@
 
    按提示完成安装；如果 Windows 询问是否允许安装，请选择“是”。安装完成后关闭 PowerShell，再执行下一步。若提示找不到 `winget`，可从 [Node.js 官网](https://nodejs.org/)下载 LTS 安装包，并保留默认的 npm 选项。
 2. 解压本压缩包，双击 `start-windows.bat`。首次启动会安装程序依赖及 Chromium，需要联网。
-3. 界面打开后，点击「Sign in to Canvas」，在新浏览器中完成 Canvas 登录和验证，然后返回界面点击「Refresh courses」。Dashboard 课程显示在前，其他可访问课程显示在后。
+3. 界面打开后，在「Canvas address」输入学校的 Canvas 地址并点击「Save address」。默认填入 UTS，其他学校请更改。点击「Sign in to Canvas」，在新浏览器中完成 Canvas 登录和验证，然后返回界面点击「Refresh courses」。Dashboard 课程显示在前，其他可访问课程显示在后。
 4. 在「Sync folder」查看默认路径，或点击「Choose folder」更改；也可以输入一个已有文件夹的完整路径，再点击「Save folder」。位置会在下次启动时保留。更改位置不会移动已经同步的文件。
 5. 勾选一门或多门课程，点击右上角的「Sync selected courses」。每门课有单独的进度条，程序依次同步选中的课程。同步结束如果有未完成项，原因会显示在进度条下方。
 6. 打开同步位置中的课程文件夹，在 `Course Index.md` 查看模块和资料链接。
@@ -45,6 +45,7 @@
 
 ## 本地组织
 
+- 使用其他学校的 Canvas 地址时，课程会存放在同步位置下对应学校的子文件夹；已有 UTS 课程路径不变。
 - `Modules`：按 Canvas 模块建立目录，保存页面、附件及作业。页面中识别出的 Canvas 附件链接指向本地文件。
 - `Other Materials`：不在任何模块中发现的资料、未归入模块的作业及课程公告。
 - `Course Index.md`：按模块顺序列出资料；同一份文件可以被多个模块引用，但只保存一份原文件。
@@ -54,7 +55,7 @@
 
 ## 当前限制
 
-- 当前 Canvas 地址配置为 UTS（`https://canvas.uts.edu.au`），尚不能在界面选择其他学校的地址。
+- 默认地址为 UTS Canvas；其他学校请在登录前修改。尚未使用其他学校的账号完成端到端测试。
 - 尚未在 Windows 或通过本程序登录后的真实 UTS Canvas 课程上完成端到端测试。云端浏览器已验证 UTS 登录会话可以读取 Canvas 课程接口；课程同步本身已使用模拟课程数据测试。
 - 本版本不获取 Zoom 或其他内嵌录播的字幕和音频，也不下载视频。页面中显示的录播链接会保留在页面中；外部工具可能仅保留 Canvas 入口。
 - 只能同步当前账号有权访问、且能够通过 Canvas 接口发现的内容。第三方平台、受限文件及复杂嵌入内容可能无法离线保存；请查看失败提示和课程索引。

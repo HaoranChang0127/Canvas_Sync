@@ -1,5 +1,5 @@
-const {test}=require('node:test');const assert=require('node:assert/strict');const fs=require('node:fs/promises');const path=require('node:path');const os=require('node:os');const {readSettings,writeSettings}=require('./settings');
-test('选择的同步位置保存并可重新读取，错误路径不会覆盖',async()=>{const tmp=await fs.mkdtemp(path.join(os.tmpdir(),'canvas-settings-'));try{const data=path.join(tmp,'config'),folder=path.join(tmp,'chosen');await fs.mkdir(folder);assert.deepEqual(await writeSettings(data,folder),{folder});assert.equal((await readSettings(data)).folder,folder);await assert.rejects(()=>writeSettings(data,path.join(tmp,'missing')));assert.equal((await readSettings(data)).folder,folder)}finally{await fs.rm(tmp,{recursive:true,force:true})}});
+const {test}=require('node:test');const assert=require('node:assert/strict');const fs=require('node:fs/promises');const path=require('node:path');const os=require('node:os');const {readSettings,writeSettings,writeCanvasUrl,DEFAULT_CANVAS_URL}=require('./settings');
+test('选择的同步位置保存并可重新读取，错误路径不会覆盖',async()=>{const tmp=await fs.mkdtemp(path.join(os.tmpdir(),'canvas-settings-'));try{const data=path.join(tmp,'config'),folder=path.join(tmp,'chosen');await fs.mkdir(folder);assert.deepEqual(await writeSettings(data,folder),{folder,canvasUrl:DEFAULT_CANVAS_URL});assert.equal((await readSettings(data)).folder,folder);await assert.rejects(()=>writeSettings(data,path.join(tmp,'missing')));assert.equal((await readSettings(data)).folder,folder)}finally{await fs.rm(tmp,{recursive:true,force:true})}});
 
 test('Ubuntu folder picker returns a selected folder and handles cancellation', {skip:process.platform!=='linux'}, async()=>{
  const tmp=await fs.mkdtemp(path.join(os.tmpdir(),'canvas-picker-'));
@@ -15,4 +15,18 @@ test('Ubuntu folder picker returns a selected folder and handles cancellation', 
   await fs.unlink(picker);
   await assert.rejects(chooseFolder,/Install zenity/);
  }finally{process.env.PATH=previous;await fs.rm(tmp,{recursive:true,force:true})}
+});
+
+
+test('Canvas address is normalized, persists alongside the folder, and rejects invalid input',async()=>{
+ const tmp=await fs.mkdtemp(path.join(os.tmpdir(),'canvas-origin-'));
+ try{
+  const data=path.join(tmp,'config'),folder=path.join(tmp,'folder');await fs.mkdir(folder);
+  await writeSettings(data,folder);
+  assert.equal((await writeCanvasUrl(data,' canvas.example.edu/courses/2 ')).canvasUrl,'https://canvas.example.edu');
+  assert.equal((await writeSettings(data,folder)).canvasUrl,'https://canvas.example.edu');
+  await assert.rejects(()=>writeCanvasUrl(data,'javascript:alert(1)'));
+  await assert.rejects(()=>writeCanvasUrl(data,'https://user:pass@example.com'));
+  assert.equal((await readSettings(data)).canvasUrl,'https://canvas.example.edu');
+ }finally{await fs.rm(tmp,{recursive:true,force:true})}
 });

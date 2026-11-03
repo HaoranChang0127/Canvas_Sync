@@ -4,19 +4,30 @@ const os=require('node:os');
 const {execFile}=require('node:child_process');
 const {promisify}=require('node:util');
 const execute=promisify(execFile);
+const DEFAULT_CANVAS_URL='https://canvas.uts.edu.au';
 function defaultFolder(){return path.join(os.homedir(),'Documents','Canvas Course Library');}
 async function readSettings(appData){
-  try{const s=JSON.parse(await fs.readFile(path.join(appData,'settings.json'),'utf8'));return {folder:s.folder||defaultFolder()};}
-  catch(e){if(e.code==='ENOENT')return {folder:defaultFolder()};throw e;}
+  try{const s=JSON.parse(await fs.readFile(path.join(appData,'settings.json'),'utf8'));return {folder:s.folder||defaultFolder(),canvasUrl:s.canvasUrl||DEFAULT_CANVAS_URL};}
+  catch(e){if(e.code==='ENOENT')return {folder:defaultFolder(),canvasUrl:DEFAULT_CANVAS_URL};throw e;}
 }
 async function writeSettings(appData,folder){
   if(typeof folder!=='string'||!path.isAbsolute(folder.trim()))throw Error('Enter a full folder path.');
   folder=path.normalize(folder.trim());
   const stat=await fs.stat(folder).catch(()=>null);
   if(!stat||!stat.isDirectory())throw Error('Folder does not exist. Create it or choose an existing folder.');
+  const settings={...await readSettings(appData),folder};
   await fs.mkdir(appData,{recursive:true});
-  await fs.writeFile(path.join(appData,'settings.json'),JSON.stringify({folder},null,2));
-  return {folder};
+  await fs.writeFile(path.join(appData,'settings.json'),JSON.stringify(settings,null,2));
+  return settings;
+}
+async function writeCanvasUrl(appData,input){
+  let url;
+  try{url=new URL(input.trim().includes('://')?input.trim():`https://${input.trim()}`);}catch{throw Error('Enter a valid Canvas address, such as https://canvas.example.edu.');}
+  if(!['http:','https:'].includes(url.protocol)||url.username||url.password)throw Error('Enter a valid Canvas address, such as https://canvas.example.edu.');
+  const settings={...await readSettings(appData),canvasUrl:url.origin};
+  await fs.mkdir(appData,{recursive:true});
+  await fs.writeFile(path.join(appData,'settings.json'),JSON.stringify(settings,null,2));
+  return settings;
 }
 async function chooseFolder(){
   if(process.platform==='linux'){
@@ -43,4 +54,4 @@ async function chooseFolder(){
   const {stdout}=await execute('powershell.exe',['-NoProfile','-STA','-Command',script],{windowsHide:true,encoding:'utf8'});
   return stdout.trim()||null;
 }
-module.exports={readSettings,writeSettings,chooseFolder,defaultFolder};
+module.exports={readSettings,writeSettings,writeCanvasUrl,chooseFolder,defaultFolder,DEFAULT_CANVAS_URL};
