@@ -27,7 +27,26 @@ class Canvas {
     }
     return result;
   }
-  courses(){return this.list('/api/v1/courses?enrollment_state=active&per_page=100');}
+  async courses(){
+    const requests=[
+      ['当前课程','/api/v1/courses?enrollment_state=active&state[]=available&state[]=completed&per_page=100'],
+      ['历史课程','/api/v1/courses?enrollment_state=completed&state[]=available&state[]=completed&per_page=100'],
+      ['待加入课程','/api/v1/courses?enrollment_state=invited_or_pending&state[]=available&state[]=completed&per_page=100'],
+      ['Dashboard 课程','/api/v1/dashboard/dashboard_cards']
+    ];
+    const results=await Promise.allSettled(requests.map(([,url])=>this.list(url)));
+    if(results.slice(0,3).every(x=>x.status==='rejected'))throw results[0].reason;
+    const warnings=results.flatMap((result,i)=>result.status==='rejected'?[`${requests[i][0]}读取失败：${result.reason.message}`]:[]);
+    const cards=results[3].status==='fulfilled'?results[3].value:[];
+    const all=new Map();
+    for(const result of results.slice(0,3))if(result.status==='fulfilled')for(const course of result.value)if(course.id)all.set(course.id,{...all.get(course.id),...course});
+    const dashboardIds=new Set();
+    for(const card of cards){if(!card.id)continue;dashboardIds.add(card.id);if(!all.has(card.id))all.set(card.id,{id:card.id,name:card.originalName||card.shortName||card.courseCode||card.courseName||String(card.id)});}
+    const ordered=[];
+    for(const card of cards){const course=all.get(card.id);if(course&&!ordered.some(c=>c.id===course.id))ordered.push({...course,dashboard:true});}
+    for(const course of all.values())if(!dashboardIds.has(course.id))ordered.push({...course,dashboard:false});
+    return {courses:ordered,warnings};
+  }
 }
 
 const portableLink = value => value.split(path.sep).map(encodeURIComponent).join('/');
