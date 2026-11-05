@@ -2,6 +2,7 @@ const fs = require('node:fs/promises');
 const path = require('node:path');
 const {safeName, saveManaged, links, extractFileId} = require('./core');
 const {recordingsInPage,syncRecording}=require('./recordings');
+const {syncZoomLti}=require('./zoom-lti');
 const ORIGIN = 'https://canvas.uts.edu.au';
 
 class Canvas {
@@ -162,6 +163,18 @@ async function syncCourse(canvas,course,base,progress=()=>{}) {
       await write(rel,`<!doctype html><html><head><meta charset="utf-8"><title>${escapeHtml(a.title)}</title></head><body><h1>${escapeHtml(a.title)}</h1>${body}</body></html>`,key,a.updated_at);
       record(announcementGroup,a.title,'Announcement',rel,a.html_url);
     }catch(e){failures.push(`${a.title}: ${e.message}`);}tick(a.title);
+  }
+  const tabs=await canvas.list(`${prefix}/tabs?per_page=100`).catch(()=>[]);
+  const zoom=tabs.find(tab=>/^zoom$/i.test(tab.label||'')&&tab.html_url);
+  if(zoom){
+    try{
+      const zoomUrl=new URL(zoom.html_url,canvas.origin).toString();
+      const items=await syncZoomLti(canvas.context,zoomUrl,courseDir,state,name=>progress(0.98,name));
+      for(const item of items){
+        record(other,item.title,item.found?'Recording transcript or audio':item.status,item.notePath||null,item.url);
+        if(!item.found)failures.push(`${item.title}: ${item.status}`);
+      }
+    }catch(e){failures.push(`Zoom recordings: ${e.message.split('\n')[0]}`);}
   }
   for(const item of recordings.values()){
     progress(0.98,`Recording: ${item.title}`);

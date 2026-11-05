@@ -55,3 +55,25 @@ test('downloads from a Zoom audio transcript page with an empty href',async()=>{
   assert.match(await fs.readFile(path.join(root,path.dirname(result.notePath),'Transcript.vtt'),'utf8'),/^WEBVTT/);
  }finally{await fs.rm(root,{recursive:true,force:true})}
 });
+
+test('re-syncing a recording with a changed play URL updates one file and preserves local edits',async()=>{
+ const root=await fs.mkdtemp(path.join(os.tmpdir(),'canvas-resync-'));
+ try{
+  const state={},empty={count:async()=>0,first(){return this}};
+  let content='WEBVTT\nfirst';
+  const transcript={count:async()=>1,first(){return this},getAttribute:async()=>'/lecture.vtt'};
+  const page=()=>({on(){},route:async()=>{},goto:async()=>{},waitForTimeout:async()=>{},url:()=> 'https://zoom.us/rec/play/temp',locator:s=>s.includes('.vtt')?transcript:empty,getByRole:()=>empty,close:async()=>{}});
+  const context={newPage:async()=>page(),request:{get:async()=>({ok:()=>true,body:async()=>Buffer.from(content)})}};
+  const item={title:'Lecture Oct 16',key:'course 1 - Oct 16',url:'https://zoom.us/rec/play/one',passcode:''};
+  const one=await syncRecording(context,item,root,state);
+  content='WEBVTT\nsecond';const two=await syncRecording(context,{...item,url:'https://zoom.us/rec/play/two'},root,state);
+  assert.equal(one.notePath,two.notePath);
+  const dir=path.join(root,path.dirname(one.notePath));
+  assert.equal(await fs.readFile(path.join(dir,'Transcript.vtt'),'utf8'),content);
+  assert.deepEqual((await fs.readdir(dir)).sort(),['Recording.md','Transcript.vtt']);
+  await fs.writeFile(path.join(dir,'Transcript.vtt'),'personal notes');
+  content='WEBVTT\nthird';const three=await syncRecording(context,item,root,state);
+  assert.equal(await fs.readFile(path.join(dir,'Transcript.vtt'),'utf8'),'personal notes');
+  assert.match(three.status,/not overwritten/);
+ }finally{await fs.rm(root,{recursive:true,force:true})}
+});
