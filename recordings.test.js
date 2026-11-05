@@ -39,3 +39,19 @@ test('falls back to audio and records an unavailable transcript',async()=>{
   assert.equal(missing.found,false);assert.match(await fs.readFile(path.join(root,missing.notePath),'utf8'),/No accessible transcript or audio/);
  }finally{await fs.rm(root,{recursive:true,force:true})}
 });
+
+test('downloads from a Zoom audio transcript page with an empty href',async()=>{
+ const root=await fs.mkdtemp(path.join(os.tmpdir(),'canvas-zoom-'));
+ try{
+  const source=path.join(root,'download');await fs.writeFile(source,'WEBVTT\n\n00:00:00.000 --> 00:00:01.000\nHello\n');
+  const empty={count:async()=>0,first(){return this}};
+  const heading={count:async()=>1};
+  let clicked=false;
+  const link={count:async()=>1,first(){return this},click:async()=>{clicked=true}};
+  const page={on(){},route:async()=>{},goto:async()=>{},waitForTimeout:async()=>{},url:()=> 'https://zoom.us/rec/play/transcript',locator:()=>empty,getByRole:(role)=>role==='heading'?heading:role==='link'?link:empty,waitForEvent:async()=>({path:async()=>source,suggestedFilename:()=> 'transcript.vtt'}),close:async()=>{}};
+  const context={newPage:async()=>page};
+  const result=await syncRecording(context,{title:'Lecture',url:'https://zoom.us/rec/play/transcript',passcode:''},root,{});
+  assert.equal(clicked,true);assert.equal(result.found,true);
+  assert.match(await fs.readFile(path.join(root,path.dirname(result.notePath),'Transcript.vtt'),'utf8'),/^WEBVTT/);
+ }finally{await fs.rm(root,{recursive:true,force:true})}
+});

@@ -1,4 +1,5 @@
 const path=require('node:path');
+const fs=require('node:fs/promises');
 const crypto=require('node:crypto');
 const {links,safeName,saveManaged}=require('./core');
 
@@ -27,7 +28,16 @@ async function syncRecording(context,recording,courseDir,state){
     const transcript=page.locator('a[href*=".vtt"],a[href*=".srt"]').first();
     const audio=page.locator('a[href*=".m4a"],a[href*=".mp3"]').first();
     const link=await transcript.count()?transcript:(await audio.count()?audio:null);
-    if(captions.length){
+    const transcriptPage=page.getByRole('heading',{name:/audio transcript/i});
+    const downloadLink=page.getByRole('link',{name:/^download\b/i});
+    if(await transcriptPage.count()&&await downloadLink.count()){
+      const [download]=await Promise.all([page.waitForEvent('download'),downloadLink.first().click()]);
+      const data=await fs.readFile(await download.path());
+      const ext=path.extname(download.suggestedFilename()).toLowerCase();
+      const name=`Transcript${['.vtt','.srt','.txt'].includes(ext)?ext:'.txt'}`;
+      const saved=await saveManaged(courseDir,path.join(folder,name),data,state,`recording:${id}:${name}`,null);
+      file=saved.path;kind='Transcript';status=saved.status==='local-change'?'Local file modified; not overwritten.':'Transcript saved.';
+    }else if(captions.length){
       const saved=await saveManaged(courseDir,path.join(folder,'Transcript.vtt'),await captions[0],state,`recording:${id}:Transcript.vtt`,null);
       file=saved.path;kind='Transcript';status=saved.status==='local-change'?'Local file modified; not overwritten.':'Transcript saved.';
     }else if(link){
