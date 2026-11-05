@@ -35,7 +35,7 @@ async function syncZoomLti(context,canvasUrl,courseDir,state,progress=()=>{}){
         const cards=listing.locator('.lti-recording-item');
         await cards.first().waitFor({timeout:30000});
         const transcript=cards.filter({hasText:/audio transcript/i}).first();
-        try{await transcript.waitFor({timeout:12000});}catch{}
+        try{await transcript.waitFor({timeout:45000});}catch{}
         const audio=cards.filter({hasText:/audio only/i}).first();
         const card=await transcript.count()?transcript:(await audio.count()?audio:null);
         if(card){
